@@ -5,17 +5,19 @@ import (
 	"log"
 
 	"github.com/anaseto/gruid"
+	"github.com/google/gops/agent"
 )
 
 const (
-	UIWidth   = 60
-	UIHeight  = 27
-	MapWidth  = UIWidth - 2
-	MapHeight = UIHeight - 5
-	LogLines  = 5
+	UIWidth  = 60
+	UIHeight = 27
 )
 
 func main() {
+	if err := agent.Listen(agent.Options{}); err != nil {
+		log.Fatal(err)
+	}
+
 	// Construct the drawgrid, and a new model.
 	gd := gruid.NewGrid(UIWidth, UIHeight)
 	m := NewModel(gd)

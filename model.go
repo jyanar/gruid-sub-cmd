@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"math/rand"
+	"runtime"
 	"time"
 
 	"github.com/anaseto/gruid"
@@ -25,9 +26,10 @@ func NewModel(gd gruid.Grid) *model {
 
 func (m *model) randomizeGrid() {
 	it := m.grid.Iterator()
+	possible_color_values := []uint{0, 100, 150, 175, 250}
 	for it.Next() {
-		fg := gruid.Color(rand.Intn(256))
-		bg := gruid.Color(rand.Intn(256))
+		fg := gruid.Color(possible_color_values[rand.Intn(5)])
+		bg := gruid.Color(possible_color_values[rand.Intn(5)])
 		it.SetCell(gruid.Cell{Rune: 'a' + rune(rand.Intn(26)), Style: gruid.Style{Fg: fg, Bg: bg}})
 	}
 }
@@ -106,5 +108,22 @@ func (m *model) myCmd() gruid.Cmd {
 }
 
 func (m *model) Draw() gruid.Grid {
+	m.grid.Fill(gruid.Cell{Rune: ' '})
 	return m.grid
+}
+
+// PrintMemUsage outputs the current, total and OS memory being used. As well as the number
+// of garage collection cycles completed.
+func PrintMemUsage() {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	// For info on each, see: /pkg/runtime/#MemStats
+	log.Printf("Alloc = %v MiB", bToMb(m.Alloc))
+	log.Printf("\tTotalAlloc = %v MiB", bToMb(m.TotalAlloc))
+	log.Printf("\tSys = %v MiB", bToMb(m.Sys))
+	log.Printf("\tNumGC = %v\n", m.NumGC)
+}
+
+func bToMb(b uint64) uint64 {
+	return b / 1024 / 1024
 }

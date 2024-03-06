@@ -26,11 +26,24 @@ func NewModel(gd gruid.Grid) *model {
 
 func (m *model) randomizeGrid() {
 	it := m.grid.Iterator()
-	possible_color_values := []uint{0, 100, 150, 175, 250}
+	possible_color_values := []uint{0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250}
 	for it.Next() {
-		fg := gruid.Color(possible_color_values[rand.Intn(5)])
-		bg := gruid.Color(possible_color_values[rand.Intn(5)])
+		fg := gruid.Color(possible_color_values[rand.Intn(len(possible_color_values))])
+		bg := gruid.Color(possible_color_values[rand.Intn(len(possible_color_values))])
 		it.SetCell(gruid.Cell{Rune: 'a' + rune(rand.Intn(26)), Style: gruid.Style{Fg: fg, Bg: bg}})
+
+		//! Stress test
+		//! Warning: Memory will grow indefinitely. This is because gruid-sdl maintains
+		//! textures in a map of type map[gruid.Cell]*sdl.Texture. Thus, if we're
+		//! generating every possible gruid.Cell->sdl.Texture combination, that's
+		//! (26 runes)*(4,294,967,295 fg colors)*(4,294,967,295 bg colors) = 4.8e20
+		//! unique key-texture pairs.
+		// fg := gruid.Color(rand.Intn(256))
+		// bg := gruid.Color(rand.Intn(256))
+		// it.SetCell(gruid.Cell{
+		// 	Rune:  'a' + rune(rand.Intn(26)),
+		// 	Style: gruid.Style{Fg: fg, Bg: bg},
+		// })
 	}
 }
 
@@ -80,10 +93,9 @@ func (m *model) Update(msg gruid.Msg) gruid.Effect {
 	return nil
 }
 
-// Recurring ticker
+// Recurring event
 func (m *model) mySub() gruid.Sub {
 	return func(ctx context.Context, ch chan<- gruid.Msg) {
-		ctx, cancel := context.WithCancel(ctx)
 		ticker := time.NewTicker(200 * time.Millisecond)
 		defer ticker.Stop()
 		for {
@@ -91,7 +103,6 @@ func (m *model) mySub() gruid.Sub {
 			case <-ticker.C:
 				ch <- subMsg(1)
 			case <-ctx.Done():
-				cancel()
 				return
 			}
 		}
@@ -108,7 +119,6 @@ func (m *model) myCmd() gruid.Cmd {
 }
 
 func (m *model) Draw() gruid.Grid {
-	m.grid.Fill(gruid.Cell{Rune: ' '})
 	return m.grid
 }
 
@@ -118,7 +128,7 @@ func PrintMemUsage() {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 	// For info on each, see: /pkg/runtime/#MemStats
-	log.Printf("Alloc = %v MiB", bToMb(m.Alloc))
+	log.Printf("\tAlloc = %v MiB", bToMb(m.Alloc))
 	log.Printf("\tTotalAlloc = %v MiB", bToMb(m.TotalAlloc))
 	log.Printf("\tSys = %v MiB", bToMb(m.Sys))
 	log.Printf("\tNumGC = %v\n", m.NumGC)

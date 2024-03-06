@@ -56,10 +56,7 @@ func NewTileDrawer() (*TileDrawer, error) {
 		return nil, err
 	}
 
-	// Create new drawer for tiles using the face. Note that we could use
-	// multiple faces (e.g. italic/bold/etc) -- in that case we would simply
-	// define drawers for those as well and call the appropriate one in the
-	// GetImage method.
+	// Create new drawer for tiles using the face.
 	t.drawer, err = tiles.NewDrawer(face)
 	if err != nil {
 		return nil, err
